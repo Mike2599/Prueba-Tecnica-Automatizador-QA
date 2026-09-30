@@ -88,4 +88,4 @@ La suite también corre en **GitHub Actions** con cada push a `main`. El resulta
 
 ## Uso de IA
 
-Usé Claude Code como apoyo para redactar la documentación y para comentar las partes esenciales del código. 
+Usé Claude Code como apoyo para redactar la documentación y para comentar las partes esenciales del código.

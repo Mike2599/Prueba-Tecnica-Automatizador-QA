@@ -12,7 +12,7 @@ Solución con **Playwright + TypeScript**:
 
 | Parte | Entregable | Ubicación |
 |-------|------------|-----------|
-| 1 - Diseño de casos (20) | Matriz de 24 casos con trazabilidad y prioridad por riesgo | [`docs/01-casos-de-prueba.md`](docs/01-casos-de-prueba.md) |
+| 1 - Diseño de casos (20) | Matriz de 24 casos con trazabilidad y prioridad por riesgo | [`docs/01-casos-de-prueba.md`](docs/01-casos-de-prueba.md) · versión Excel: [`docs/01-casos-de-prueba.xlsx`](docs/01-casos-de-prueba.xlsx) |
 | 2 - Automatización web (40) | Escenarios A y B | `pages/`, `tests/web/`, `tests/fixtures.ts` |
 | 3 - Framework (15) | Propuesta con diagrama + pipeline | [`docs/02-propuesta-framework.md`](docs/02-propuesta-framework.md), [`azure-pipelines.yml`](azure-pipelines.yml) |
 | 4 - API (15) | GET `/api/users/2` + caso negativo | `api/`, `tests/api/` |

@@ -1,0 +1,69 @@
+# Pipeline de referencia para Azure DevOps (Parte 3).
+# Smoke en cada PR/push a main; regresion completa programada cada noche.
+trigger:
+  branches:
+    include: [main]
+
+pr:
+  branches:
+    include: [main]
+
+schedules:
+  - cron: '0 5 * * 1-5' # 00:00 hora Colombia (UTC-5), lunes a viernes
+    displayName: Regresion nocturna
+    branches:
+      include: [main]
+    always: true
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  # Variable Group con secretos (ORANGE_USER, ORANGE_PASSWORD, REQRES_API_KEY) vinculado a Key Vault
+  - group: qa-automation-secrets
+  - name: CI
+    value: 'true'
+  - name: TEST_ENV
+    value: qa
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20.x'
+    displayName: Instalar Node.js
+
+  - script: npm ci
+    displayName: Instalar dependencias
+
+  - script: npx playwright install --with-deps chromium
+    displayName: Instalar navegador
+
+  - script: npm run typecheck
+    displayName: Validar TypeScript
+
+  - script: |
+      if [ "$(Build.Reason)" = "Schedule" ]; then
+        npx playwright test --project=web-chromium --project=api
+      else
+        npx playwright test --project=web-chromium --project=api --grep "@smoke|@api"
+      fi
+    displayName: Ejecutar pruebas
+    env:
+      ORANGE_USER: $(ORANGE_USER)
+      ORANGE_PASSWORD: $(ORANGE_PASSWORD)
+      REQRES_API_KEY: $(REQRES_API_KEY)
+
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: JUnit
+      testResultsFiles: reports/junit.xml
+      testRunTitle: Playwright - $(Build.Reason)
+    displayName: Publicar resultados
+
+  - task: PublishPipelineArtifact@1
+    condition: succeededOrFailed()
+    inputs:
+      targetPath: reports
+      artifact: playwright-report
+    displayName: Publicar reporte HTML y evidencias

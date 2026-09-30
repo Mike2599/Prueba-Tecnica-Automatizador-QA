@@ -7,6 +7,7 @@ export class PimPage extends BasePage {
   readonly title: Locator;
   readonly employeeInformationTitle: Locator;
   readonly employeeNameInput: Locator;
+  readonly employeeIdInput: Locator;
   readonly searchButton: Locator;
   readonly recordsFoundLabel: Locator;
   readonly resultRows: Locator;
@@ -21,20 +22,34 @@ export class PimPage extends BasePage {
       .locator('.oxd-input-group')
       .filter({ has: page.getByText('Employee Name', { exact: true }) })
       .getByRole('textbox');
+    this.employeeIdInput = page
+      .locator('.oxd-input-group')
+      .filter({ has: page.getByText('Employee Id', { exact: true }) })
+      .getByRole('textbox');
     this.searchButton = page.getByRole('button', { name: 'Search' });
     this.recordsFoundLabel = page.locator('.orangehrm-horizontal-padding .oxd-text--span');
     this.resultRows = page.locator('.oxd-table-body .oxd-table-card');
     this.toast = page.locator('.oxd-toast');
   }
 
-  /**
-   * Busca por nombre y retorna la respuesta del backend de la busqueda.
-   * La espera se sincroniza con la llamada real a la API (sin pausas fijas).
-   */
+  /** Busca por nombre y retorna la respuesta del backend de la busqueda. */
   async searchEmployeeByName(name: string): Promise<Response> {
     await this.employeeNameInput.fill(name);
+    return this.search('nameOrId');
+  }
+
+  /** Busca por Employee Id y retorna la respuesta del backend de la busqueda. */
+  async searchEmployeeById(id: string): Promise<Response> {
+    await this.employeeIdInput.fill(id);
+    return this.search('employeeId');
+  }
+
+  /**
+   * Presiona Search y espera la llamada real a la API con el filtro indicado (sin pausas fijas).
+   */
+  private async search(filterParam: string): Promise<Response> {
     const searchResponse = this.page.waitForResponse(
-      (res) => res.url().includes('/api/v2/pim/employees') && res.url().includes('nameOrId='),
+      (res) => res.url().includes('/api/v2/pim/employees') && res.url().includes(`${filterParam}=`),
     );
     await this.searchButton.click();
     return searchResponse;

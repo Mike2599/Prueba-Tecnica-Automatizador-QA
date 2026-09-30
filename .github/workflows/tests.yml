@@ -1,0 +1,45 @@
+name: Pruebas automatizadas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      TEST_ENV: qa
+      # Opcional: se define en Settings > Secrets and variables > Actions si ReqRes llega a exigir API key
+      REQRES_API_KEY: ${{ secrets.REQRES_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Instalar navegador
+        run: npx playwright install --with-deps chromium
+
+      - name: Validar TypeScript
+        run: npm run typecheck
+
+      - name: Ejecutar pruebas web y API
+        run: npm test
+
+      - name: Publicar reporte HTML y evidencias
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-playwright
+          path: reports/
+          retention-days: 30

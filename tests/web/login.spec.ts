@@ -1,5 +1,6 @@
 import { test, expect } from '../fixtures';
 import { DashboardPage } from '../../pages/DashboardPage';
+import { LoginPage } from '../../pages/LoginPage';
 import { config } from '../../config/environments';
 import { webData } from '../../data/testData';
 
@@ -30,5 +31,31 @@ test.describe('Escenario A - Inicio de sesion', { tag: ['@web', '@smoke'] }, () 
         await expect(dashboardPage.widget(widget), `Widget "${widget}" visible`).toBeVisible();
       }
     });
+  });
+});
+
+test.describe('Escenario A - Casos alternos', { tag: ['@web', '@regression'] }, () => {
+  test('WEB-03 Login con contrasena incorrecta muestra "Invalid credentials"', async ({ page, loginPage }) => {
+    await loginPage.open();
+    await loginPage.login(config.credentials.username, webData.login.wrongPassword);
+
+    await expect(loginPage.errorAlert).toHaveText(webData.login.invalidCredentialsMessage);
+    await expect(page, 'Debe permanecer en la pantalla de login').toHaveURL(LoginPage.URL_PATTERN);
+  });
+
+  test('WEB-04 Login con campos vacios muestra "Required" en usuario y contrasena', async ({ page, loginPage }) => {
+    await loginPage.open();
+    await loginPage.loginButton.click();
+
+    await expect(loginPage.fieldError('Username')).toHaveText(webData.login.requiredMessage);
+    await expect(loginPage.fieldError('Password')).toHaveText(webData.login.requiredMessage);
+    await expect(page, 'Debe permanecer en la pantalla de login').toHaveURL(LoginPage.URL_PATTERN);
+  });
+
+  test('WEB-05 Acceso directo al Dashboard sin sesion redirige al login', async ({ page, loginPage, dashboardPage }) => {
+    await dashboardPage.open();
+
+    await expect(page).toHaveURL(LoginPage.URL_PATTERN);
+    await expect(loginPage.loginButton).toBeVisible();
   });
 });

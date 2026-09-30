@@ -37,3 +37,24 @@ test.describe('Escenario B - Busqueda sin resultados', { tag: ['@web', '@regress
     });
   });
 });
+
+test.describe('Escenario B - Casos alternos', { tag: ['@web', '@regression'] }, () => {
+  test('WEB-06 Buscar por un Employee Id inexistente muestra "No Records Found"', async ({
+    page,
+    loggedIn,
+    pimPage,
+  }) => {
+    const employeeId = webData.pim.nonExistentEmployeeId();
+    test.info().annotations.push({ type: 'dato', description: `Employee Id buscado: ${employeeId}` });
+
+    await loggedIn.goToModule('PIM');
+    await expect(page).toHaveURL(PimPage.URL_PATTERN);
+
+    const response = await pimPage.searchEmployeeById(employeeId);
+
+    expect(response.status()).toBe(200);
+    expect((await response.json()).meta.total, 'El backend no debe retornar empleados').toBe(0);
+    await expect(pimPage.toast).toContainText(webData.pim.noResultsMessage);
+    await expect(pimPage.resultRows).toHaveCount(0);
+  });
+});

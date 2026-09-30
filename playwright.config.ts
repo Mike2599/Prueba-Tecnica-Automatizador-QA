@@ -7,6 +7,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   // Reintento solo en CI: mitiga inestabilidad del demo publico sin ocultar fallas en local.
+  // Si una prueba pasa al reintentar, el reporte la marca como "flaky".
   retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 2 : undefined,
   timeout: 60_000,

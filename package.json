@@ -1,0 +1,25 @@
+{
+  "name": "automatizador-qa-playwright",
+  "version": "1.0.0",
+  "description": "Prueba tecnica Automatizador QA - Web (OrangeHRM) + API (ReqRes) con Playwright y TypeScript",
+  "private": true,
+  "scripts": {
+    "test": "playwright test --project=web-chromium --project=api",
+    "test:all-browsers": "playwright test",
+    "test:web": "playwright test --project=web-chromium",
+    "test:api": "playwright test --project=api",
+    "test:headed": "playwright test --project=web-chromium --headed",
+    "test:firefox": "playwright test --project=web-firefox",
+    "report": "playwright show-report reports/html",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^20.19.43",
+    "dotenv": "^16.6.1",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,8 @@
+node_modules/
+reports/html/
+reports/results/
+reports/junit.xml
+test-results/
+playwright-report/
+.env
+.DS_Store

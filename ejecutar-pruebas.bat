@@ -2,32 +2,46 @@
 setlocal
 title Pruebas automatizadas - Automatizador QA
 cd /d "%~dp0"
+set "NODE_DIR=%~dp0.node"
 
 echo ============================================================
 echo  Prueba tecnica Automatizador QA - Playwright + TypeScript
 echo ============================================================
 echo.
 
-rem --- 1. Node.js (18 o superior) ---
-where node >nul 2>&1
-if errorlevel 1 (
-    echo [1/4] No se encontro Node.js. Instalando la version LTS con winget...
-    where winget >nul 2>&1
-    if errorlevel 1 goto sin_winget
-    winget install --id OpenJS.NodeJS.LTS -e --silent --accept-package-agreements --accept-source-agreements
-    set "PATH=%ProgramFiles%\nodejs;%PATH%"
-    where node >nul 2>&1
-    if errorlevel 1 goto reiniciar
-)
+rem --- 1. Node.js 18 o superior ---
+rem Usa el Node.js del equipo si sirve. Si no, usa (o descarga) una copia portable
+rem dentro de la carpeta .node del proyecto. No instala nada en el sistema.
+call :buscar_node
+if defined NODE_OK goto node_listo
 
-for /f "tokens=1 delims=v." %%v in ('node -v') do set NODE_MAJOR=%%v
-if %NODE_MAJOR% LSS 18 (
-    echo Se necesita Node.js 18 o superior y esta instalada la version:
-    node -v
-    echo Actualicelo desde https://nodejs.org y vuelva a ejecutar este archivo.
+if not exist "%NODE_DIR%\node.exe" goto descargar_node
+set "PATH=%NODE_DIR%;%PATH%"
+call :buscar_node
+if defined NODE_OK goto node_listo
+
+:descargar_node
+echo [1/4] No se encontro Node.js 18 o superior.
+echo       Descargando Node.js portable desde nodejs.org (solo para este proyecto)...
+set "NODE_ARCH=x64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "NODE_ARCH=arm64"
+if exist "%NODE_DIR%" rmdir /s /q "%NODE_DIR%"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol='Tls12'; $all=Invoke-RestMethod 'https://nodejs.org/dist/index.json'; $v=($all | Where-Object { $_.lts } | Select-Object -First 1).version; $n='node-'+$v+'-win-%NODE_ARCH%'; Write-Host ('      Version: '+$v); $zip=Join-Path $env:TEMP ($n+'.zip'); $tmp=Join-Path $env:TEMP 'node-portable-qa'; Invoke-WebRequest ('https://nodejs.org/dist/'+$v+'/'+$n+'.zip') -OutFile $zip -UseBasicParsing; if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force }; Expand-Archive $zip $tmp -Force; Move-Item (Join-Path $tmp $n) '%NODE_DIR%'; Remove-Item $zip -Force; Remove-Item $tmp -Recurse -Force"
+if errorlevel 1 (
+    echo.
+    echo No se pudo descargar Node.js. Revise la conexion a internet o instalelo
+    echo manualmente desde https://nodejs.org y vuelva a ejecutar este archivo.
     goto fin_error
 )
-for /f %%v in ('node -v') do echo [1/4] Node.js %%v encontrado.
+set "PATH=%NODE_DIR%;%PATH%"
+call :buscar_node
+if not defined NODE_OK (
+    echo No se pudo preparar Node.js. Instalelo desde https://nodejs.org y vuelva a intentar.
+    goto fin_error
+)
+
+:node_listo
+for /f %%v in ('node -v') do echo [1/4] Node.js %%v listo.
 
 rem --- 2. Dependencias del proyecto ---
 echo.
@@ -65,16 +79,14 @@ echo.
 pause
 exit /b %RESULTADO%
 
-:sin_winget
-echo No se encontro winget para instalar Node.js automaticamente.
-echo Instale Node.js LTS desde https://nodejs.org y vuelva a ejecutar este archivo.
-start "" https://nodejs.org
-goto fin_error
-
-:reiniciar
-echo Node.js quedo instalado, pero esta ventana aun no lo reconoce.
-echo Cierre esta ventana y vuelva a ejecutar este archivo.
-goto fin_error
+rem Deja NODE_OK definido si hay un node.exe 18 o superior en el PATH.
+:buscar_node
+set "NODE_OK="
+set "NODE_MAJOR=0"
+where node >nul 2>&1 || exit /b 0
+for /f "tokens=1 delims=v." %%v in ('node -v') do set "NODE_MAJOR=%%v"
+if %NODE_MAJOR% GEQ 18 set "NODE_OK=1"
+exit /b 0
 
 :fin_error
 echo.

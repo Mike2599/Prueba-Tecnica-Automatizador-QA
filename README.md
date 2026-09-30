@@ -52,6 +52,8 @@ npm run test:api       # solo API
 npm run test:headed    # web con el navegador visible
 ```
 
+En Windows también se puede hacer doble clic en `ejecutar-pruebas.bat`. Instala Node.js si no está (con winget), las dependencias y Chromium, corre las pruebas y abre el reporte.
+
 ## Reportes
 
 ```bash

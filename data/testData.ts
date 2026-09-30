@@ -16,3 +16,12 @@ export const webData = {
     nonExistentEmployee: () => `QA-NoExiste-${Date.now()}`,
   },
 };
+
+export const apiData = {
+  user: {
+    id: 2,
+    first_name: 'Janet',
+    last_name: 'Weaver',
+    email: 'janet.weaver@reqres.in',
+  },
+};
